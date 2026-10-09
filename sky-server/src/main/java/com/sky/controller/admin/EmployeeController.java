@@ -86,18 +86,8 @@ public class EmployeeController {
 
     @GetMapping("/page")
     @ApiOperation(value = "员工分页查询")
-//    public Result showEmpByPage(@RequestParam(required = false) String name,
-//                                @RequestParam(defaultValue = "1") Integer page,
-//                                @RequestParam(defaultValue = "10") Integer pageSize) {
-//        EmployeePageQueryDTO employeePageQueryDTO=new EmployeePageQueryDTO();
-//
-//        employeePageQueryDTO.setPage(page);
-//        employeePageQueryDTO.setPageSize(pageSize);
-//        if(name!=null) employeePageQueryDTO.setName(name);
-//
-//        employeeService
-//        return Result.success();
-//    }
+    //@PathVariable 绑定 URL 路径中的路径变量，需要在映射路径里明确写出占位符 @GetMapping("/{id}")
+    //此处也可以使用 @RequestParam(可指定默认值)
     public Result<PageResult> showEmpByPage(EmployeePageQueryDTO employeePageQueryDTO) {
         PageResult empInfoPageRes = employeeService.getEmpInfo(employeePageQueryDTO);
         return Result.success(empInfoPageRes);
