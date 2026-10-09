@@ -1,9 +1,13 @@
 package com.sky.mapper;
 
+import com.github.pagehelper.Page;
 import com.sky.dto.EmployeeDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 @Mapper
 public interface EmployeeMapper {
@@ -26,4 +30,9 @@ public interface EmployeeMapper {
      */
     int insertNewEmp(Employee employee);
 
+    /**
+     * 分页查询员工
+     *
+     */
+    Page<Employee> getEmpInfoList(EmployeePageQueryDTO employeePageQueryDTO);
 }

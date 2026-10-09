@@ -2,7 +2,12 @@ package com.sky.service;
 
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
+import com.sky.result.PageResult;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public interface EmployeeService {
 
@@ -14,5 +19,7 @@ public interface EmployeeService {
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
     Integer insertEmp(EmployeeDTO employeeDTO);
+
+    PageResult getEmpInfo(EmployeePageQueryDTO employeePageQueryDTO);
 
 }

@@ -1,29 +1,41 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.JwtClaimsConstant;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.properties.JwtProperties;
+import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
+import com.sky.utils.JwtUtil;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
-
+    @Autowired
+    private JwtProperties jwtProperties;
     /**
      * 员工登录
      *
@@ -61,6 +73,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
+
     @Override
     public Integer insertEmp(EmployeeDTO employeeDTO) {
         //  1.现针对前端传过来的数据做校验
@@ -78,13 +91,28 @@ public class EmployeeServiceImpl implements EmployeeService {
         newEmp.setCreateTime(LocalDateTime.now());
         newEmp.setUpdateTime(LocalDateTime.now());
 
-        // TODO: 后期需要改为当前登录用户的id
-        newEmp.setCreateUser(1l);
-        newEmp.setUpdateUser(1l);
+        newEmp.setCreateUser(BaseContext.getCurrentId());
+        newEmp.setUpdateUser(BaseContext.getCurrentId());
 
         int msgCode = employeeMapper.insertNewEmp(newEmp);
 
         return  msgCode;
+    }
+
+    @Override
+    public PageResult getEmpInfo(EmployeePageQueryDTO employeePageQueryDTO) {
+        //指定DTO默认数值
+        if(employeePageQueryDTO.getPageSize()==0)
+            employeePageQueryDTO.setPageSize(10);
+
+        //利用PageHelper 开始分页查询(底层通过threadLocal传递参数拼接limit)
+        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+
+        //PageHelper要求mapper层返回一个Page对象
+        Page<Employee> empInfoList = employeeMapper.getEmpInfoList(employeePageQueryDTO);
+
+        PageResult pageResult=new PageResult(empInfoList.getTotal(),empInfoList.getResult());
+        return pageResult;
     }
 
 }
