@@ -115,4 +115,36 @@ public class EmployeeServiceImpl implements EmployeeService {
         return pageResult;
     }
 
+    @Override
+    public Integer setAccountStatus(Integer status, long id) {
+
+        //用builder 创建一个只填了部分字段的 Employee
+        Employee empBuild = Employee.builder()
+                .status(status)
+                .id(id)
+                .updateTime(LocalDateTime.now())
+                .build();
+
+        //配合mapper接口动态SQL更新对应字段即可
+        return employeeMapper.updateEmpInfo(empBuild);
+    }
+
+    @Override
+    public Integer modifyEmpInfo(EmployeeDTO employeeDTO) {
+        Employee updateEmp=new Employee();
+        BeanUtils.copyProperties(employeeDTO,updateEmp);
+
+        updateEmp.setUpdateTime(LocalDateTime.now());
+        updateEmp.setUpdateUser(BaseContext.getCurrentId());
+
+        return employeeMapper.updateEmpInfo(updateEmp);
+    }
+
+    @Override
+    public Employee getEmpInfoById(Integer id) {
+        Employee emp=employeeMapper.getEmpInfoById(id);
+        emp.setPassword("******");  //前端回显把密码隐藏
+        return emp;
+    }
+
 }

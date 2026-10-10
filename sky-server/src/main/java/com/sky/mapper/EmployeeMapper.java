@@ -35,4 +35,15 @@ public interface EmployeeMapper {
      *
      */
     Page<Employee> getEmpInfoList(EmployeePageQueryDTO employeePageQueryDTO);
+
+
+    /**
+     * 员工信息修改  （所有涉及员工信息修改都用这个mapper接口）
+     */
+    int updateEmpInfo(Employee emp);
+
+    /**
+     * 根据ID查询用户信息
+     */
+    Employee getEmpInfoById(Integer id);
 }

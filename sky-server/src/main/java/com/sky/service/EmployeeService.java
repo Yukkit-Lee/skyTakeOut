@@ -5,6 +5,7 @@ import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.result.PageResult;
+import io.swagger.models.auth.In;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -22,4 +23,9 @@ public interface EmployeeService {
 
     PageResult getEmpInfo(EmployeePageQueryDTO employeePageQueryDTO);
 
+    Integer setAccountStatus(Integer status,long id);
+
+    Integer modifyEmpInfo(EmployeeDTO employeeDTO);
+
+    Employee getEmpInfoById(Integer id);
 }

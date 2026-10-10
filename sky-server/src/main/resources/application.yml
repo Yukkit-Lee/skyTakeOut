@@ -20,6 +20,7 @@ mybatis:
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true
+    #sql原字段并不会转换驼峰(需填写原字段名称) 仅会转换作为对象属性传过来的字段名称
 
 logging:
   level:

@@ -92,4 +92,27 @@ public class EmployeeController {
         PageResult empInfoPageRes = employeeService.getEmpInfo(employeePageQueryDTO);
         return Result.success(empInfoPageRes);
     }
+
+    @PostMapping("/status/{status}")
+    @ApiOperation(value = "启用禁用员工账号")
+    public Result setAccountStatus(@PathVariable Integer status,long id){   //此处id是从post前端传过来的
+        int msgCode=employeeService.setAccountStatus(status,id);
+        return Result.success(msgCode);
+    }
+
+    @PutMapping
+    @ApiOperation(value = "编辑员工信息")
+    public Result modifyEmpInfo(@RequestBody EmployeeDTO employeeDTO){
+        log.info("编辑员工信息");
+        int msgCode=employeeService.modifyEmpInfo(employeeDTO);
+        return Result.success(msgCode);
+    }
+
+    @GetMapping("/{id}")
+    @ApiOperation(value = "根据id查询员工信息")
+    public Result<Employee> getEmpInfoById(@PathVariable Integer id){
+        log.info("根据id查询员工信息");
+        Employee emp =employeeService.getEmpInfoById(id);
+        return Result.success(emp);
+    }
 }
