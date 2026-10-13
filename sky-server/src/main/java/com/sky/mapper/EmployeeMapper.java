@@ -1,9 +1,11 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.anno.AutoFill;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
+import com.sky.enumeration.OperationType;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -28,6 +30,7 @@ public interface EmployeeMapper {
      * @param employee  员工对象，包含用户名、姓名、性别、部门等信息
      * @return 受影响的行数, 1即为插入成功, 0即为失败
      */
+    @AutoFill(value = OperationType.INSERT)
     int insertNewEmp(Employee employee);
 
     /**
@@ -40,6 +43,7 @@ public interface EmployeeMapper {
     /**
      * 员工信息修改  （所有涉及员工信息修改都用这个mapper接口）
      */
+    @AutoFill(value = OperationType.UPDATE)
     int updateEmpInfo(Employee emp);
 
     /**
