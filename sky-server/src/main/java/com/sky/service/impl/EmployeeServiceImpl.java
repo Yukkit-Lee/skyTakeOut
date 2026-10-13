@@ -88,11 +88,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         newEmp.setStatus(StatusConstant.ENABLE);
 
-        newEmp.setCreateTime(LocalDateTime.now());
-        newEmp.setUpdateTime(LocalDateTime.now());
-
-        newEmp.setCreateUser(BaseContext.getCurrentId());
-        newEmp.setUpdateUser(BaseContext.getCurrentId());
+//        newEmp.setCreateTime(LocalDateTime.now());
+//        newEmp.setUpdateTime(LocalDateTime.now());
+//
+//        newEmp.setCreateUser(BaseContext.getCurrentId());
+//        newEmp.setUpdateUser(BaseContext.getCurrentId());
 
         int msgCode = employeeMapper.insertNewEmp(newEmp);
 
@@ -134,8 +134,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee updateEmp=new Employee();
         BeanUtils.copyProperties(employeeDTO,updateEmp);
 
-        updateEmp.setUpdateTime(LocalDateTime.now());
-        updateEmp.setUpdateUser(BaseContext.getCurrentId());
+//        updateEmp.setUpdateTime(LocalDateTime.now());
+//        updateEmp.setUpdateUser(BaseContext.getCurrentId());
 
         return employeeMapper.updateEmpInfo(updateEmp);
     }

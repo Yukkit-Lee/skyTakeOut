@@ -45,11 +45,11 @@ public class CategoryServiceImpl implements CategoryService {
         BeanUtils.copyProperties(categoryDTO, newCategory);  //拷贝DTO对象原有属性
 
         newCategory.setStatus(StatusConstant.DISABLE);   //默认禁用
-        newCategory.setCreateTime(LocalDateTime.now());
-        newCategory.setUpdateTime(LocalDateTime.now());
-
-        newCategory.setCreateUser(BaseContext.getCurrentId());
-        newCategory.setUpdateUser(BaseContext.getCurrentId());
+//        newCategory.setCreateTime(LocalDateTime.now());
+//        newCategory.setUpdateTime(LocalDateTime.now());
+//
+//        newCategory.setCreateUser(BaseContext.getCurrentId());
+//        newCategory.setUpdateUser(BaseContext.getCurrentId());
 
         return categoryMapper.insertNewCategory(newCategory);
     }
@@ -86,9 +86,10 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
+//                .updateTime(LocalDateTime.now())
+//                .updateUser(BaseContext.getCurrentId())
+//                .build();
 
         return categoryMapper.modifyCategory(category);
     }
@@ -96,9 +97,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public int deleteCategory(long id) {
 
-        if(dishMapper.countByCategoryId(id)>0)
+        if (dishMapper.countByCategoryId(id) > 0)
             throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_DISH);
-        if(setmealMapper.countByCategoryId(id)>0)
+        if (setmealMapper.countByCategoryId(id) > 0)
             throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_SETMEAL);
 
         return categoryMapper.deleteCategory(id);
