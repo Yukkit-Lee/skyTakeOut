@@ -6,3 +6,7 @@ sky:
     database: sky_take_out
     username: root
     password: 666666xxx
+  alioss:
+    # Bucket 名称和地域；地域用于 SDK V2 自动选择访问地址。
+    bucket-name: spring-buck
+    bucket-region: cn-guangzhou

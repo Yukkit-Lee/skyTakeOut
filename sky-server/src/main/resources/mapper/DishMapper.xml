@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishMapper">
+
+    <sql id="commonSelect">
+        SELECT id,
+               name,
+               category_id,
+               price,
+               image,
+               description,
+               create_time,
+               update_time,
+               create_user,
+               update_user
+        FROM dish
+    </sql>
+
+    <!--设置主键回显 通过keyProperty把主键复制给id属性 -->
+    <insert id="insertNewDish" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dish (name, category_id, price, image, description, create_time, update_time, create_user,
+                          update_user, status)
+        VALUES (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{createTime}, #{updateTime}, #{createUser},
+                #{updateUser}, #{status})
+    </insert>
+    <select id="getDish" resultType="com.sky.entity.Dish">
+        SELECT * FROM dish
+        <where>
+            <if test="name != null">name like concat('%',#{name},'%')</if>
+            <if test="categoryId != null">AND category_id = #{categoryId}</if>
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+        order by name asc
+    </select>
+    <select id="getDishByDishId" resultType="com.sky.entity.Dish">
+        <include refid="commonSelect"></include>
+        WHERE id = #{id}
+    </select>
+</mapper>

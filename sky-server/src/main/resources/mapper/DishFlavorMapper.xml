@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishFlavorMapper">
+
+    <!--此处separator为下个for循环的分隔符-->
+    <insert id="insertFlavorList">
+        INSERT INTO dish_flavor (dish_id, name, value)
+        VALUES
+        <foreach collection="dishFlavorList" item="curFlavor" separator=",">
+            (#{curFlavor.dishId},#{curFlavor.name},#{curFlavor.value})
+        </foreach>
+
+    </insert>
+
+</mapper>
