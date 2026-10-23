@@ -27,4 +27,16 @@ public interface DishService {
 
     /** 根据分类Id查询菜品 */
     List<Dish> getDishByCateId(Integer cateId);
+
+    /** 分页查询菜品返回 VO */
+    PageResult getDishByPageVo(DishPageQueryDTO dishPageQueryDTO);
+
+    /** 批量删除菜品信息 */
+    int deleteDish(List<Long> idArr);
+
+    /** 修改菜品信息 */
+    void modifyDish(DishDTO dishDTO);
+
+    /** 修改菜品状态 */
+    int changeStauts(Long dishId,Integer status);
 }

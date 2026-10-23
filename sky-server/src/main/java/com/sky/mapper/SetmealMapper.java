@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface SetmealMapper {
 
+    /** 根据分类id查询套餐数量 */
     @Select("SELECT COUNT(*) FROM setmeal WHERE category_id=#{categoryId}")
     int countByCategoryId(long categoryId);
 }

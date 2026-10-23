@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.sky.entity.DishFlavor;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -25,4 +26,11 @@ public interface DishFlavorMapper {
      /** 根据菜品id查询口味 */
      @Select("SELECT * FROM dish_flavor WHERE dish_id = #{dishId}")
      List<DishFlavor> getDishFlavorByDishId(Integer dishId);
+
+     /**  修改flavor信息 */
+     int modifyFlavor(DishFlavor dishFlavor);
+
+     /** 根据菜品id删除口味信息 */
+     @Delete("DELETE FROM dish_flavor WHERE dish_id=#{dishId}")
+     int deleteFlavor(Long dishId);
 }

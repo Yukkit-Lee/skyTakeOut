@@ -13,7 +13,8 @@
                create_time,
                update_time,
                create_user,
-               update_user
+               update_user,
+               status
         FROM dish
     </sql>
 
@@ -37,4 +38,42 @@
         <include refid="commonSelect"></include>
         WHERE id = #{id}
     </select>
+
+    <!--目前flavor属性为null-->
+    <select id="getDishPageVo" resultType="com.sky.vo.DishVO">
+        SELECT dish.*,category.name as category_name
+        FROM dish
+        left join category on dish.category_id = category.id
+        <where>
+            <if test="name != null">dish.name like concat('%',#{name},'%')</if>
+            <if test="categoryId != null">AND dish.category_id =#{categoryId}</if>
+            <if test="status != null">AND dish.status = #{status}</if>
+        </where>
+    </select>
+
+    <delete id="deleteDish">
+        DELETE FROM dish
+        WHERE id in
+        <foreach collection="idArr" separator="," item="dishId" close=")" open="(">
+            #{dishId}
+        </foreach>
+    </delete>
+
+    <update id="modifyDish">
+        UPDATE dish
+        <set>
+            <if test="image != null">image = #{image},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createUser != null">create_user = #{createUser},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id =#{id}
+    </update>
+
 </mapper>

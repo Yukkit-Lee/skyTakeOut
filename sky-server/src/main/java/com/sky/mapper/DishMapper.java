@@ -2,9 +2,11 @@ package com.sky.mapper;
 
 import com.github.pagehelper.Page;
 import com.sky.anno.AutoFill;
+import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.enumeration.OperationType;
+import com.sky.vo.DishVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -27,9 +29,18 @@ public interface DishMapper {
 
     Page<Dish> getDish(DishPageQueryDTO dishPageQueryDTO);
 
-    Dish getDishByDishId(Integer id);
+    Dish getDishByDishId(Long id);
 
     /** 根据categoryId查询菜品 */
     @Select("SELECT * FROM dish where category_id=#{categoryId}")
     List<Dish> getDishByCateId(Integer categoryId);
+
+    /** 外连接分页查询菜品*/
+    Page<DishVO> getDishPageVo(DishPageQueryDTO dishPageQueryDTO);
+
+    /** 批量删除dish信息 */
+    int deleteDish(List<Long> idArr);
+
+    /** 修改菜品信息 */
+    int modifyDish(Dish dish);
 }
