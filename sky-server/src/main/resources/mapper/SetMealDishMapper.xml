@@ -12,4 +12,12 @@
             #{curDishId}
         </foreach>
     </select>
+
+
+    <insert id="insertSetMealDish">
+        INSERT INTO setmeal_dish (setmeal_id, dish_id, name, price, copies) VALUES
+        <foreach collection="setmealDishes" separator="," item="setmealdish">
+            (#{setmealdish.setmealId},#{setmealdish.dishId},#{setmealdish.name},#{setmealdish.price},#{setmealdish.copies})
+        </foreach>
+    </insert>
 </mapper>

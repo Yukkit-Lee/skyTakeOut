@@ -17,4 +17,7 @@ public interface SetMealDishMapper {
     /** 根据菜品id查询套餐信息 **/
     // SELECT * FROM seatmeal_dish WHERE dish_id in (x,x,x,xx,x,x,);
     List<SetmealDish> getSeatMealDishById(List<Long> idArr);
+
+    /** 插入 */
+    int insertSetMealDish(List<SetmealDish> setmealDishes);
 }
