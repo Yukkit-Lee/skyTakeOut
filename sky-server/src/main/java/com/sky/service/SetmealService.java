@@ -18,4 +18,13 @@ public interface SetmealService {
 
     /** 套餐分页查询 */
     PageResult getSetmealInfo(SetmealPageQueryDTO setmealPageQueryDTO);
+
+    /** 根据套餐id查询 */
+    SetmealVO searchSetmealById(Long setmealId);
+
+    /** 更改套餐状态 */
+    void changeStatus(Integer status,Long id);
+
+    /** 更新套餐信息 */
+    void modifySetMeal(SetmealDTO setmealDTO);
 }

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,7 +52,7 @@ public class SetmealServiceImpl implements SetmealService {
         Long curSetmealId = curSetMeal.getId();   //当前套餐id这一个事务中唯一
         List<SetmealDish> setmealDishList = setmealDTO.getSetmealDishes();    //获取setmealDish列表
 
-        if(setmealDishList==null || setmealDishList.isEmpty())
+        if (setmealDishList == null || setmealDishList.isEmpty())
             throw new IllegalStateException("存在未传入空对象");
 
         //遍历设置其套餐id 插入操作动态sql完成 不调用多次数据库
@@ -62,21 +63,78 @@ public class SetmealServiceImpl implements SetmealService {
         if (smdAffectRows != setmealDishList.size())
             throw new IllegalStateException("插入setmealDish表失败");
 
-        return ;
+        return;
     }
 
     @Override
     public PageResult getSetmealInfo(SetmealPageQueryDTO setmealPageQueryDTO) {
 
         // PageHelper开启分页
-        if(setmealPageQueryDTO.getPageSize()==0)
+        if (setmealPageQueryDTO.getPageSize() == 0)
             setmealPageQueryDTO.setPageSize(10);
-        PageHelper.startPage(setmealPageQueryDTO.getPage(),setmealPageQueryDTO.getPageSize());
+        PageHelper.startPage(setmealPageQueryDTO.getPage(), setmealPageQueryDTO.getPageSize());
 
         Page<SetmealVO> setmealInfoByPage = setmealMapper.getSetmealInfoByPage(setmealPageQueryDTO);
-        PageResult pageResult=new PageResult(setmealInfoByPage.getTotal(),setmealInfoByPage.getResult());
+        PageResult pageResult = new PageResult(setmealInfoByPage.getTotal(), setmealInfoByPage.getResult());
 
         return pageResult;
+    }
+
+    @Override
+    public SetmealVO searchSetmealById(Long setmealId) {
+        //后端再次验证是否空传
+        if (setmealId == null) return null;
+
+
+        SetmealVO setmealVO = setmealMapper.searchSetmealById(setmealId);
+        if(setmealVO==null) return null;    //数据库中没有相关套餐直接返回null
+
+        //setmealDishes为null 调用setMealDishMapper
+        List<SetmealDish> seatMealDishById =
+                setMealDishMapper.getSeatMealDishBySetmealId(setmealId);
+        setmealVO.setSetmealDishes(seatMealDishById);
+
+        return setmealVO;
+    }
+
+    @Override
+    public void changeStatus(Integer status, Long id) {
+
+        Setmeal newSetmeal = new Setmeal();
+        newSetmeal.setStatus(status);
+        newSetmeal.setId(id);
+        int changeMsgCode = setmealMapper.modifySetmeal(newSetmeal);
+        if (changeMsgCode == 0) throw new IllegalStateException("修改状态失败");
+
+        return;
+    }
+
+    @Override
+    @Transactional
+    public void modifySetMeal(SetmealDTO setmealDTO) {
+        // 更新setmeal -> 更新setmealDish(根据setmeal_id匹配 先删再插)
+
+        Setmeal curSetMeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, curSetMeal);
+        int setmealUpdateCode = setmealMapper.modifySetmeal(curSetMeal);
+        if (setmealUpdateCode == 0) throw new IllegalStateException("修改setmeal失败");
+
+        Long curSetmealId = setmealDTO.getId();
+        int deleteRows = setMealDishMapper.deleteInfoBySetmealId(curSetmealId);
+
+        //为SetmealDish List中每一个对象setmealId赋值
+        List<SetmealDish> curSetmealDish = setmealDTO.getSetmealDishes();
+        if (curSetmealDish == null || curSetmealDish.isEmpty())
+            throw new IllegalStateException("List<SetmealDish>为空");
+        for (SetmealDish setmealDish : curSetmealDish) {
+            setmealDish.setSetmealId(curSetmealId);
+        }
+
+        int insertRows = setMealDishMapper.insertSetMealDish(curSetmealDish);
+        if (insertRows != curSetmealDish.size()) throw new IllegalStateException("修改setmeal失败");
+
+
+        return;
     }
 
 }

@@ -20,4 +20,10 @@ public interface SetMealDishMapper {
 
     /** 插入 */
     int insertSetMealDish(List<SetmealDish> setmealDishes);
+
+    /** 根据套餐id查询套餐信息 **/
+    List<SetmealDish> getSeatMealDishBySetmealId(Long id);
+
+    /** 根据setmeal id删除 */
+    int deleteInfoBySetmealId(Long setmealId);
 }

@@ -4,6 +4,7 @@
 <mapper namespace="com.sky.mapper.SetMealDishMapper">
 
 
+
     <select id="getSeatMealDishById" resultType="com.sky.entity.SetmealDish">
 
         SELECT * FROM setmeal_dish
@@ -11,6 +12,10 @@
         <foreach collection="idArr" open="(" close=")" item="curDishId" separator=",">
             #{curDishId}
         </foreach>
+    </select>
+    <select id="getSeatMealDishBySetmealId" resultType="com.sky.entity.SetmealDish">
+        SELECT * FROM setmeal_dish
+        WHERE setmeal_id = #{id}
     </select>
 
 
@@ -20,4 +25,10 @@
             (#{setmealdish.setmealId},#{setmealdish.dishId},#{setmealdish.name},#{setmealdish.price},#{setmealdish.copies})
         </foreach>
     </insert>
+
+
+    <delete id="deleteInfoBySetmealId">
+        DELETE FROM setmeal_dish
+        WHERE setmeal_id = #{setmealId}
+    </delete>
 </mapper>
