@@ -26,4 +26,7 @@ public interface SetMealDishMapper {
 
     /** 根据setmeal id删除 */
     int deleteInfoBySetmealId(Long setmealId);
+
+    /** 批量删除setmeal_dish */
+    int deleteSetmealByIds(List<Integer> setmealIdArr);
 }

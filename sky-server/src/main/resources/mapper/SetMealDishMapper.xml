@@ -31,4 +31,12 @@
         DELETE FROM setmeal_dish
         WHERE setmeal_id = #{setmealId}
     </delete>
+    <delete id="deleteSetmealByIds">
+        DELETE FROM setmeal_dish
+        WHERE setmeal_id IN
+        <foreach collection="setmealIdArr" item="setmealId" separator="," close=")"
+                 open="(">
+            #{setmealId}
+        </foreach>
+    </delete>
 </mapper>

@@ -10,6 +10,8 @@ import com.sky.vo.SetmealVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * @author: 44219
  * @since: 2026/10/13 10:12
@@ -46,4 +48,11 @@ public interface SetmealMapper {
      */
     @AutoFill(value = OperationType.UPDATE)
     int modifySetmeal(Setmeal setmeal);
+
+    /** 批量删除套餐 */
+    int deleteSetmeal(List<Integer> ids);
+
+    /** 查询套餐状态 */
+    @Select("SELECT * FROM setmeal WHERE id=#{id}")
+    Setmeal getSetmealInfo(Integer id);
 }

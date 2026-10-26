@@ -2,22 +2,27 @@ package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.SetMealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
 import io.swagger.annotations.Authorization;
+import io.swagger.models.auth.In;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -87,7 +92,7 @@ public class SetmealServiceImpl implements SetmealService {
 
 
         SetmealVO setmealVO = setmealMapper.searchSetmealById(setmealId);
-        if(setmealVO==null) return null;    //数据库中没有相关套餐直接返回null
+        if (setmealVO == null) return null;    //数据库中没有相关套餐直接返回null
 
         //setmealDishes为null 调用setMealDishMapper
         List<SetmealDish> seatMealDishById =
@@ -135,6 +140,38 @@ public class SetmealServiceImpl implements SetmealService {
 
 
         return;
+    }
+
+    @Override
+    @Transactional
+    public void deleteSetmeal(List<Integer> ids) {
+
+        // 批量删除套餐信息 : 处于起售状态的商品套餐不能删除
+        // 还需要同步删除setmeal_dish表中信息
+        if (ids == null || ids.isEmpty())
+            throw new DeletionNotAllowedException("idList为空");
+
+        // ids转为LinkedHashSet进行去重
+        // 1.元素不可重复 2.保留加入顺序
+        LinkedHashSet<Integer> linkedHashIdSet=new LinkedHashSet<>(ids);
+        List<Integer> uniqueIdArr=new ArrayList<>(linkedHashIdSet);
+
+        for (Integer id : uniqueIdArr) {
+            Setmeal setmealInfo = setmealMapper.getSetmealInfo(id);
+            if(setmealInfo==null)
+                throw new DeletionNotAllowedException("存在未知id");
+            if(setmealInfo.getStatus()== StatusConstant.ENABLE)
+                throw new DeletionNotAllowedException("存在套餐在售,不可删除");
+        }
+
+        int affectRows = setmealMapper.deleteSetmeal(uniqueIdArr);
+        if (affectRows != uniqueIdArr.size())
+            throw new DeletionNotAllowedException("批量删除setmeal表失败");
+
+        setMealDishMapper.deleteSetmealByIds(uniqueIdArr);
+
+
+
     }
 
 }

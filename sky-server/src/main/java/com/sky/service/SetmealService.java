@@ -6,6 +6,8 @@ import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.result.PageResult;
 import com.sky.vo.SetmealVO;
 
+import java.util.List;
+
 /**
  * @author: 44219
  * @since: 2026/10/24 10:03
@@ -27,4 +29,7 @@ public interface SetmealService {
 
     /** 更新套餐信息 */
     void modifySetMeal(SetmealDTO setmealDTO);
+
+    /** 批量删除套餐信息 */
+    void deleteSetmeal(List<Integer> ids);
 }

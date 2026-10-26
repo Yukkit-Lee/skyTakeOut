@@ -10,6 +10,7 @@
                 #{createTime},#{updateTime},#{createUser},#{updateUser},#{status})
     </insert>
 
+
     <select id="getSetmealInfoByPage" resultType="com.sky.vo.SetmealVO">
         SELECT setmeal.*,category.name as categoryName
         FROM setmeal
@@ -46,4 +47,15 @@
         </set>
         WHERE id = #{id}
     </update>
+
+
+    <delete id="deleteSetmeal">
+        DELETE FROM setmeal
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+
 </mapper>
