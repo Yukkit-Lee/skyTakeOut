@@ -15,3 +15,6 @@ sky:
     host: localhost
     database: 0
     #不同数据库中数据相互隔离
+  wechat:
+    appid: wx14248d468172231f
+    secret: 5845fba36bf6aef027cc7184dcac6a6f
