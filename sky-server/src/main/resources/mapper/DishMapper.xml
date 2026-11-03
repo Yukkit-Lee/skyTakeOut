@@ -39,6 +39,16 @@
         WHERE id = #{id}
     </select>
 
+    <!-- 按传入的非空条件查询菜品；用户端传入分类 id 和起售状态 -->
+    <select id="list" resultType="com.sky.entity.Dish">
+        <include refid="commonSelect"/>
+        <where>
+            <if test="categoryId != null">AND category_id = #{categoryId}</if>
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
     <!--目前flavor属性为null-->
     <select id="getDishPageVo" resultType="com.sky.vo.DishVO">
         SELECT dish.*,category.name as category_name

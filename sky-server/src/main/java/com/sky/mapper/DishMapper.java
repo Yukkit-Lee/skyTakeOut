@@ -35,6 +35,15 @@ public interface DishMapper {
     @Select("SELECT * FROM dish where category_id=#{categoryId}")
     List<Dish> getDishByCateId(Integer categoryId);
 
+    /**
+     * 根据菜品对象中非空的条件查询菜品。
+     * 用户端按分类查询时，传入 categoryId 和 status，只返回该分类下对应状态的菜品。
+     *
+     * @param dish 查询条件；当前使用 categoryId 和 status
+     * @return 符合条件的菜品列表，未查到时返回空列表
+     */
+    List<Dish> list(Dish dish);
+
     /** 外连接分页查询菜品*/
     Page<DishVO> getDishPageVo(DishPageQueryDTO dishPageQueryDTO);
 
