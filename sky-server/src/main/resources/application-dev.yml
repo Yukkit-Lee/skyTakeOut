@@ -13,7 +13,7 @@ sky:
   redis:
     port: 6379
     host: localhost
-    database: 0
+    database: 2
     #不同数据库中数据相互隔离
   wechat:
     appid: wx14248d468172231f

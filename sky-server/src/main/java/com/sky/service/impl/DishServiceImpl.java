@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -21,11 +22,15 @@ import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author: 44219
@@ -46,6 +51,9 @@ public class DishServiceImpl implements DishService {
 
     @Autowired
     private SetMealDishMapper setMealDishMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     @Transactional  //开启事务 (事务抛异常才会终止)
@@ -77,6 +85,9 @@ public class DishServiceImpl implements DishService {
             if (falvorRows != flavors.size())
                 throw new IllegalStateException("新增菜品口味失败");
         }
+
+        String redisKey = "dishList_" + dishDTO.getCategoryId();
+        cleanCache(redisKey);
 
     }
 
@@ -161,9 +172,15 @@ public class DishServiceImpl implements DishService {
          * 2.判断是否被套餐关联？
          * 3.删除菜品关联口味信息
          * */
+
+        // 菜品分类集合
+        Set<Long> categoryIdSet = new HashSet<>();
+
         // 1.判断是否存在 在售菜品？
         for (Long curId : idArr) {
             Dish curDish = dishMapper.getDishByDishId(curId);
+            if (curDish != null)
+                categoryIdSet.add(curDish.getCategoryId());    // 此处插入set用于删除缓存
             if (curDish.getStatus() == StatusConstant.ENABLE)
                 throw new DeletionNotAllowedException("菜品在售中禁止删除");
 
@@ -182,6 +199,13 @@ public class DishServiceImpl implements DishService {
 
         //DELETE FROM dish WHERE id in (trueId,noExistId) -> 执行成功 只删除trueId数据
         int msgCode = dishMapper.deleteDish(idArr);
+
+        // 可能涉及多个菜品分类 直接删除全部缓存
+        Set<String> redisKeys = new HashSet<>();
+        for (Long categoryId : categoryIdSet) {
+            redisKeys.add("dishList_" + categoryId);
+        }
+        redisTemplate.delete(redisKeys);
 
         return msgCode;
     }
@@ -220,30 +244,59 @@ public class DishServiceImpl implements DishService {
             }
         }
 
+        // 修改菜品可能换分类 直接删除所有
+        String redisKey = "dishList_*";
+        cleanCache(redisKey);
+
     }
 
     @Override
+    @Transactional
     public int changeStauts(Long dishId, Integer status) {
         Dish curDish = new Dish();
         curDish.setStatus(status);
         curDish.setId(dishId);
 
-        return dishMapper.modifyDish(curDish);
+        int msgCode = dishMapper.modifyDish(curDish);
+        if (msgCode != 1) throw new IllegalStateException("状态更新失败");
+
+        // 若获取categoryId则需要再查数据库
+        String redisKey = "dishList_*";
+        cleanCache(redisKey);
+
+        return 1;
     }
 
     /**
      * 条件查询菜品和口味
-     * @param dish
+     *
+     * @param categoryId
      * @return
      */
-    public List<DishVO> listWithFlavor(Dish dish) {
+    public List<DishVO> listWithFlavor(Long categoryId) {
+        // 缓存对象配置
+        String redisKey = "dishList_" + categoryId;
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        String cacheJson = valueOperations.get(redisKey);
+
+        // 若数据已在缓存直接返回 缓存结果
+        if (cacheJson != null) {    // []也算返回结果
+            // DishVO.class 指定数组元素的类型：JSON 中的每个菜品都还原为 DishVO
+            return JSON.parseArray(cacheJson, DishVO.class);
+        }
+
+        // 不存在则先查询再写入缓存中
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+
         List<Dish> dishList = dishMapper.list(dish);
 
         List<DishVO> dishVOList = new ArrayList<>();
 
         for (Dish d : dishList) {
             DishVO dishVO = new DishVO();
-            BeanUtils.copyProperties(d,dishVO);
+            BeanUtils.copyProperties(d, dishVO);
 
             //根据菜品id查询对应的口味
             List<DishFlavor> flavors = dishFlavorMapper.getDishFlavorByDishId(Math.toIntExact(d.getId()));
@@ -252,6 +305,17 @@ public class DishServiceImpl implements DishService {
             dishVOList.add(dishVO);
         }
 
+        // 写入缓存
+        valueOperations.set(redisKey, JSON.toJSONString(dishVOList));
+
         return dishVOList;
+    }
+
+    /**
+     * 根据模式匹配删除缓存
+     */
+    private void cleanCache(String pattern) {
+        Set keys = redisTemplate.keys(pattern); //根据模式匹配key集合
+        redisTemplate.delete(keys);
     }
 }
