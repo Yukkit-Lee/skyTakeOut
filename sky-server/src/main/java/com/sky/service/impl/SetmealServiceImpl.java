@@ -18,6 +18,7 @@ import io.swagger.annotations.Authorization;
 import io.swagger.models.auth.In;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class SetmealServiceImpl implements SetmealService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "setmealCache",key = "#setmealDTO.getCategoryId()")
     /** 新增套餐 */
     public void insertSetmeal(SetmealDTO setmealDTO) {
         // 要对两个表进行操作 -> setmeal, setmeal_dish
@@ -104,6 +106,7 @@ public class SetmealServiceImpl implements SetmealService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
     public void changeStatus(Integer status, Long id) {
 
         Setmeal newSetmeal = new Setmeal();
@@ -117,6 +120,7 @@ public class SetmealServiceImpl implements SetmealService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
     public void modifySetMeal(SetmealDTO setmealDTO) {
         // 更新setmeal -> 更新setmealDish(根据setmeal_id匹配 先删再插)
 
@@ -145,6 +149,7 @@ public class SetmealServiceImpl implements SetmealService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
     public void deleteSetmeal(List<Integer> ids) {
 
         // 批量删除套餐信息 : 处于起售状态的商品套餐不能删除

@@ -52,4 +52,6 @@ public interface DishMapper {
 
     /** 修改菜品信息 */
     int modifyDish(Dish dish);
+
+    /***/
 }
