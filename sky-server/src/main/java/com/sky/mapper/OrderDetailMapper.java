@@ -2,6 +2,9 @@ package com.sky.mapper;
 
 import com.sky.entity.OrderDetail;
 import org.apache.ibatis.annotations.Mapper;
+import org.aspectj.weaver.ast.Or;
+
+import java.util.List;
 
 /**
  * @author: 44219
@@ -14,4 +17,6 @@ public interface OrderDetailMapper {
     /** 插入订单明细 */
     int insertDetails(OrderDetail orderDetail);
 
+    /** 插入多条订单明细 */
+    int insertMultiDetails(List<OrderDetail> orderDetailList);
 }

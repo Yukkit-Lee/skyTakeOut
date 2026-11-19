@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class OrderSubmitVO implements Serializable {
     //订单id
     private Long id;
-    //订单号
+    //订单号:order number字段
     private String orderNumber;
     //订单金额
     private BigDecimal orderAmount;
