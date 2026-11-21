@@ -5,9 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
@@ -38,8 +36,8 @@ import java.util.List;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    public static final String ROLE_USER="user";
-    public static final String ROLE_ADMIN="admin";
+    public static final String ROLE_USER = "user";
+    public static final String ROLE_ADMIN = "admin";
 
     @Autowired
     private OrderMapper orderMapper;
@@ -181,7 +179,7 @@ public class OrderServiceImpl implements OrderService {
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
         Page<Orders> orderInfo = orderMapper.getOrderInfo(ordersPageQueryDTO);
 
-        List<OrderVO> voList = transferOrderVO(orderInfo,ROLE_USER);
+        List<OrderVO> voList = transferOrderVO(orderInfo, ROLE_USER);
 
         // pageResult构造方法中(pages总数，pages对象数据)
         PageResult pageResult = new PageResult(orderInfo.getTotal(), voList);
@@ -196,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
         Page<Orders> orderInfo = orderMapper.getOrderInfo(ordersPageQueryDTO);
 
-        List<OrderVO> voList = transferOrderVO(orderInfo,ROLE_ADMIN);
+        List<OrderVO> voList = transferOrderVO(orderInfo, ROLE_ADMIN);
 
         // pageResult构造方法中(pages总数，pages对象数据)
         PageResult pageResult = new PageResult(orderInfo.getTotal(), voList);
@@ -208,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderStatisticsVO getStatistics() {
 
 
-        OrderStatisticsVO orderStatisticsVO=new OrderStatisticsVO();
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
         Integer toConfirmNum = orderMapper.getStatusCount(Orders.TO_BE_CONFIRMED);
         orderStatisticsVO.setToBeConfirmed(toConfirmNum);
         Integer deliveryNum = orderMapper.getStatusCount(Orders.DELIVERY_IN_PROGRESS);
@@ -218,6 +216,125 @@ public class OrderServiceImpl implements OrderService {
 
         return orderStatisticsVO;
 
+    }
+
+    @Override
+    @Transactional
+    public int confirmOrder(OrdersConfirmDTO ordersConfirmDTO) {
+
+        // 考虑业务逻辑：什么情况下可以接单?
+        // 2待接单->可接单 1待付款->用户端需付款 其他状态抛异常
+
+        if (ordersConfirmDTO == null || ordersConfirmDTO.getId() == null)
+            throw new IllegalStateException("前端传入orderId为空");
+
+        Orders curOrder = orderMapper.getOrderById(ordersConfirmDTO.getId());
+        if (curOrder == null)
+            throw new IllegalStateException("订单不存在");
+
+        if (curOrder.getPayStatus() == Orders.PAID && curOrder.getStatus() == Orders.TO_BE_CONFIRMED) {
+            curOrder.setStatus(Orders.CONFIRMED);   //更改订单状态为已接单
+            int affectRows = orderMapper.updateOrderInfo(curOrder);
+            if (affectRows != 1)
+                throw new IllegalStateException("更改订单状态失败!");
+        } else
+            throw new IllegalStateException("接单失败:未支付或已经接单");
+
+        return 1;
+    }
+
+    @Override
+    @Transactional
+    public int rejectOrder(OrdersRejectionDTO ordersRejectionDTO) {
+
+        if (ordersRejectionDTO == null)
+            throw new IllegalStateException("DTO对象为空");
+
+        // 业务逻辑: 拒单之后进行退款
+
+        Orders order = orderMapper.getOrderById(ordersRejectionDTO.getId());
+        if (order == null)
+            throw new IllegalStateException("订单不存在");
+
+        if (order.getStatus() != Orders.TO_BE_CONFIRMED)
+            throw new IllegalStateException("订单状态异常");
+
+        order.setStatus(Orders.CANCELLED);
+        // 此处调用wx退款接口....
+        order.setPayStatus(Orders.REFUND);
+        order.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        order.setCancelTime(LocalDateTime.now());
+
+        int affectRows = orderMapper.updateOrderInfo(order);
+        if (affectRows != 1)
+            throw new IllegalStateException("更改订单状态失败");
+
+        return 1;
+    }
+
+    @Override
+    public int cancelOrder(OrdersCancelDTO ordersCancelDTO) {
+        // 业务逻辑: 待派送4 派送中5 可以取消
+
+        if (ordersCancelDTO == null || ordersCancelDTO.getId() == null)
+            throw new IllegalStateException("前端传入DTO为空");
+
+        Orders orderById = orderMapper.getOrderById(ordersCancelDTO.getId());
+        if (orderById == null)
+            throw new IllegalStateException("订单不存在");
+
+        // 订单未接单/未在派送中
+        if (orderById.getStatus() != Orders.DELIVERY_IN_PROGRESS
+                && orderById.getStatus() != Orders.CONFIRMED)
+            throw new IllegalStateException("订单状态异常取消失败");
+
+        orderById.setCancelReason(ordersCancelDTO.getCancelReason());
+        orderById.setCancelTime(LocalDateTime.now());
+        orderById.setStatus(Orders.CANCELLED);
+        orderById.setPayStatus(Orders.REFUND);
+
+        int affectRows = orderMapper.updateOrderInfo(orderById);
+        if (affectRows != 1)
+            throw new IllegalStateException("修改订单状态异常!");
+
+        return 1;
+    }
+
+    @Override
+    public void deliveryOrder(Long orderId) {
+
+        // 业务逻辑: 先判断前端参数是否为空 -> 订单是否存在
+        // 订单状态必须为 已接单 Status=3
+        if(orderId==null)
+            throw new IllegalStateException("orderId为空");
+
+        Orders order = orderMapper.getOrderById(orderId);
+        if(order==null||order.getStatus()!=Orders.CONFIRMED)
+            throw new IllegalStateException("订单不存在或状态异常");
+
+        order.setStatus(Orders.DELIVERY_IN_PROGRESS);
+
+        int affectRows = orderMapper.updateOrderInfo(order);
+        if(affectRows!=1)
+            throw new IllegalStateException("更新订单状态失败!");
+    }
+
+    @Override
+    public void completeOrder(Long orderId) {
+        // 业务逻辑: 先判断前端参数是否为空 -> 订单是否存在
+        // 订单状态必须为 派送中 Status=4
+        if(orderId==null)
+            throw new IllegalStateException("orderId为空");
+
+        Orders order = orderMapper.getOrderById(orderId);
+        if(order==null||order.getStatus()!=Orders.DELIVERY_IN_PROGRESS)
+            throw new IllegalStateException("订单不存在或状态异常");
+
+        order.setStatus(Orders.COMPLETED);
+
+        int affectRows = orderMapper.updateOrderInfo(order);
+        if(affectRows!=1)
+            throw new IllegalStateException("更新订单状态失败!");
     }
 
     @Override
@@ -297,11 +414,11 @@ public class OrderServiceImpl implements OrderService {
     /**
      * 辅助函数：用户端管理端抽离转换OrdersVO对象
      */
-    private List<OrderVO> transferOrderVO(Page<Orders> orderInfo,String role) {
+    private List<OrderVO> transferOrderVO(Page<Orders> orderInfo, String role) {
         List<OrderVO> voList = new ArrayList<>();
 
         // 查询到订单记录
-        if (orderInfo != null&&orderInfo.size() != 0 ) {
+        if (orderInfo != null && orderInfo.size() != 0) {
             for (Orders orders : orderInfo) {
                 Long curOrderId = orders.getId(); //获取当前订单id
                 List<OrderDetail> details = orderDetailMapper.getDetailsByOrderId(curOrderId);
@@ -310,10 +427,10 @@ public class OrderServiceImpl implements OrderService {
                 BeanUtils.copyProperties(orders, newOrderVo);   //这里注意ordersVO和orders继承关系
 
                 // 遵循接口文档返回参数规则：
-                if(role==ROLE_USER)
-                newOrderVo.setOrderDetailList(details);
-                else if(role==ROLE_ADMIN){
-                    String dishStr=buildOrdersString(details);
+                if (role == ROLE_USER)
+                    newOrderVo.setOrderDetailList(details);
+                else if (role == ROLE_ADMIN) {
+                    String dishStr = buildOrdersString(details);
                     newOrderVo.setOrderDishes(dishStr);
                 }
                 voList.add(newOrderVo);
@@ -323,12 +440,14 @@ public class OrderServiceImpl implements OrderService {
         return voList;
     }
 
-    /** 辅助函数:拼接OrdersVO对象的orderDIshes变量 用于字符串展示菜品 */
-    private String buildOrdersString(List<OrderDetail> details){
-        List<String> dishList=new ArrayList<>();
+    /**
+     * 辅助函数:拼接OrdersVO对象的orderDIshes变量 用于字符串展示菜品
+     */
+    private String buildOrdersString(List<OrderDetail> details) {
+        List<String> dishList = new ArrayList<>();
         for (OrderDetail detail : details) {
-            dishList.add(detail.getName()+'*'+detail.getNumber()+';');
+            dishList.add(detail.getName() + '*' + detail.getNumber() + ';');
         }
-        return String.join("",dishList);
+        return String.join("", dishList);
     }
 }
