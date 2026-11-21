@@ -1,8 +1,12 @@
 package com.sky.mapper;
 
+import com.github.pagehelper.Page;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * @author: 44219
@@ -15,6 +19,16 @@ public interface OrderMapper {
     /** 插入订单数据 */
     int insertOrder(Orders orders);
 
+    /** 获取订单信息 */
+    Page<Orders> getOrderInfo(OrdersPageQueryDTO ordersPageQueryDTO);
+    // 这里参数为什么要放DTO对象？ 是为了PageHelper把分页参数传入吗
+    // 管理端接口 可复用
+
+    /** 获取单条订单信息 */
+    Orders getOrderById(Long orderId);
+
+    /** 修改订单信息 */
+    int updateOrderInfo(Orders orders);
 
     /**
      * 根据订单号查询订单
@@ -28,4 +42,7 @@ public interface OrderMapper {
      * @param orders
      */
     void update(Orders orders);
+
+    /** 查询订单数量统计 */
+    Integer getStatusCount(Integer status);
 }

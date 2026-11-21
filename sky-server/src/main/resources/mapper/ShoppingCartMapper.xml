@@ -11,6 +11,16 @@
                  #{setmealId}, #{dishFlavor}
                , #{amount}, #{createTime},#{number})
     </insert>
+    <insert id="insertMultiCart">
+        INSERT INTO shopping_cart
+            (name, image, user_id, dish_id,
+                                   setmeal_id, dish_flavor, amount, create_time,number)
+        VALUES
+        <foreach collection="shoppingCartList" item="cart" separator=",">
+            (#{cart.name},#{cart.image},#{cart.userId},#{cart.dishId},#{cart.setmealId},
+             #{cart.dishFlavor},#{cart.amount},#{cart.createTime},#{cart.number})
+        </foreach>
+    </insert>
 
     <select id="searchExist" resultType="com.sky.entity.ShoppingCart">
         SELECT * FROM shopping_cart

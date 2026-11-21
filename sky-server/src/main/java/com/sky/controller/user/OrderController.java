@@ -8,6 +8,7 @@ import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -37,23 +38,36 @@ public class OrderController {
     }
 
 
-//    @GetMapping("/orderDetail/{id}")
-//    @ApiOperation("查询订单详情")
-//    public Result getOrderDetail(@PathVariable("id") Long orderId){
-//
-//        OrderSubmitVO orderSubmitVO = orderService.submitOrder(ordersSubmitDTO);
-//        return Result.success(orderSubmitVO);
-//    }
-
     @GetMapping("/historyOrders")
     @ApiOperation("历史订单查询")
     // 这里写成OrdersPageQueryDTO 因为请求参数非json所以不需要加 @Requestbody
     public Result<PageResult> getHistoryOrders(OrdersPageQueryDTO ordersPageQueryDTO) {
 
-
-        return null;
+        PageResult ordersByPage = orderService.getUserOrdersByPage(ordersPageQueryDTO);
+        return Result.success(ordersByPage);
     }
 
+    @GetMapping("/orderDetail/{id}")
+    @ApiOperation("查询某条订单详情")
+    public Result getOrderDetail(@PathVariable("id") Long orderId){
+        OrderVO orderDetails = orderService.getOrderDetails(orderId);
+        return  Result.success(orderDetails);
+    }
+
+    @PutMapping("/cancel/{id}")
+    @ApiOperation("取消订单")
+    public Result cancelOrder(@PathVariable("id") Long orderId){
+        orderService.cancelOrder(orderId);
+        return  Result.success();
+    }
+
+    @PostMapping("/repetition/{id}")
+    @ApiOperation("再来一单")
+    public Result repetitionOrder(@PathVariable("id") Long orderId) {
+
+        orderService.repetitionOrder(orderId);
+        return Result.success();
+    }
 
     /**
      * 订单支付

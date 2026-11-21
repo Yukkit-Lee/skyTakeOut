@@ -19,4 +19,7 @@ public interface OrderDetailMapper {
 
     /** 插入多条订单明细 */
     int insertMultiDetails(List<OrderDetail> orderDetailList);
+
+    /** 根据orderId查询菜品明细 */
+    List<OrderDetail> getDetailsByOrderId(Long orderId);
 }

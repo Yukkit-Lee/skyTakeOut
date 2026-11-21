@@ -86,6 +86,12 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public int cleanShoppingCart() {
         Long curUserId = BaseContext.getCurrentId();
+
+        // 清空购物车之前应当先检查当前用户购物车是否为空 不能盲于SQL更新影响行数判断
+        List<ShoppingCart> shoppingCart = shoppingCartMapper.getShoppingCart(curUserId);
+        if (shoppingCart.isEmpty())
+            return 1;
+
         int affectRows = shoppingCartMapper.cleanShoppingCart(curUserId);
         if (affectRows == 0) throw new IllegalStateException("清空购物车失败");
 
