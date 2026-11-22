@@ -50,4 +50,8 @@ public interface OrderMapper {
     /** 定时任务查询订单(查询超时订单) */
     @Select("SELECT * FROM orders WHERE status=#{status} AND order_time < #{time}")
     List<Orders> getOrderByStatusAndTime(Integer status, LocalDateTime time);
+
+    /** 统计符合时间区间的订单 */
+    // 用between要注意 between (end 23:59:59)
+    List<Orders> getOrdersByDurationTime(LocalDateTime begin,LocalDateTime end);
 }
