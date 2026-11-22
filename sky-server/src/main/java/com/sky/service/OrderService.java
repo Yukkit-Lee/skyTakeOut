@@ -29,6 +29,9 @@ public interface OrderService {
     /** 再来一单 */
     void repetitionOrder(Long orderId);
 
+    /** 客户催单 */
+    void userReminder(Long orderId);
+
     /**
      * 订单支付
      * @param ordersPaymentDTO

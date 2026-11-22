@@ -172,10 +172,10 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
 
         // 支付成功后通知商家接单：
-        Map<String,String> messageMap=new HashMap<>();
-        messageMap.put("type","1");
-        messageMap.put("orderId",ordersDB.getId().toString());
-        messageMap.put("content",outTradeNo+"需要接单!");
+        Map messageMap = new HashMap<>();
+        messageMap.put("type", 1);
+        messageMap.put("orderId", ordersDB.getId());
+        messageMap.put("content", outTradeNo + "需要接单!");
 
         String messageJson = JSON.toJSONString(messageMap);
         webSocketServer.sendToAllClient(messageJson);
@@ -318,17 +318,17 @@ public class OrderServiceImpl implements OrderService {
 
         // 业务逻辑: 先判断前端参数是否为空 -> 订单是否存在
         // 订单状态必须为 已接单 Status=3
-        if(orderId==null)
+        if (orderId == null)
             throw new IllegalStateException("orderId为空");
 
         Orders order = orderMapper.getOrderById(orderId);
-        if(order==null||order.getStatus()!=Orders.CONFIRMED)
+        if (order == null || order.getStatus() != Orders.CONFIRMED)
             throw new IllegalStateException("订单不存在或状态异常");
 
         order.setStatus(Orders.DELIVERY_IN_PROGRESS);
 
         int affectRows = orderMapper.updateOrderInfo(order);
-        if(affectRows!=1)
+        if (affectRows != 1)
             throw new IllegalStateException("更新订单状态失败!");
     }
 
@@ -336,17 +336,17 @@ public class OrderServiceImpl implements OrderService {
     public void completeOrder(Long orderId) {
         // 业务逻辑: 先判断前端参数是否为空 -> 订单是否存在
         // 订单状态必须为 派送中 Status=4
-        if(orderId==null)
+        if (orderId == null)
             throw new IllegalStateException("orderId为空");
 
         Orders order = orderMapper.getOrderById(orderId);
-        if(order==null||order.getStatus()!=Orders.DELIVERY_IN_PROGRESS)
+        if (order == null || order.getStatus() != Orders.DELIVERY_IN_PROGRESS)
             throw new IllegalStateException("订单不存在或状态异常");
 
         order.setStatus(Orders.COMPLETED);
 
         int affectRows = orderMapper.updateOrderInfo(order);
-        if(affectRows!=1)
+        if (affectRows != 1)
             throw new IllegalStateException("更新订单状态失败!");
     }
 
@@ -421,6 +421,31 @@ public class OrderServiceImpl implements OrderService {
         int affectRows = shoppingCartMapper.insertMultiCart(cartList);
         if (affectRows != cartList.size())
             throw new IllegalStateException("重新添加至购物车失败!");
+    }
+
+    @Override
+    public void userReminder(Long orderId) {
+
+        if (orderId == null)
+            throw new IllegalStateException("订单号为空");
+
+        Orders order = orderMapper.getOrderById(orderId);
+        if (order == null)
+            throw new IllegalStateException("查询不到有效订单");
+
+        // 业务逻辑:当前订单处于 已支付 且 商家未接单状态
+        // 客户端(用户) -> 服务端 -> 客户端(商家)
+        if (order.getPayStatus() == Orders.PAID && order.getStatus() == Orders.TO_BE_CONFIRMED) {
+            Map messageMap=new HashMap();
+            messageMap.put("type",2);
+            messageMap.put("orderId",order.getId());
+            messageMap.put("content","用户催单");
+
+            String messageStr = JSON.toJSONString(messageMap);
+            webSocketServer.sendToAllClient(messageStr);
+        }
+        else
+            throw new IllegalStateException("订单状态异常!");
     }
 
 
