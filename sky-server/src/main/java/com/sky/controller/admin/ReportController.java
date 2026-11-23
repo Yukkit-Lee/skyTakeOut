@@ -3,7 +3,10 @@ package com.sky.controller.admin;
 import com.sky.dto.DataOverViewQueryDTO;
 import com.sky.result.Result;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
+import com.sky.vo.UserReportVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +31,34 @@ public class ReportController {
     @GetMapping("/turnoverStatistics")
     @ApiOperation("营业额统计接口")
     public Result<TurnoverReportVO> turnoverStatistics(@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
-                                                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end){
-        TurnoverReportVO turnOver = reportService.getTurnOver(begin,end);
-
+                                                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+        TurnoverReportVO turnOver = reportService.getTurnOver(begin, end);
         return Result.success(turnOver);
     }
 
+
+    @GetMapping("/userStatistics")
+    @ApiOperation("用户统计接口")
+    public Result<UserReportVO> userStatistics(@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+                                               @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+        UserReportVO userOver = reportService.getUserOver(begin, end);
+        return Result.success(userOver);
+    }
+
+    @GetMapping("/ordersStatistics")
+    @ApiOperation("订单统计接口")
+    public Result<OrderReportVO> orderStatistics(@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+                                                 @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+        OrderReportVO res = reportService.getOrdersData(begin, end);
+        return Result.success(res);
+    }
+
+    @GetMapping("/top10")
+    @ApiOperation("销量排名TOP10")
+    public Result<SalesTop10ReportVO> topTenStatistics(@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+                                                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+
+        return Result.success();
+    }
 
 }

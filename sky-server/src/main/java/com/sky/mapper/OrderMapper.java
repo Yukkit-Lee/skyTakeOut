@@ -51,7 +51,13 @@ public interface OrderMapper {
     @Select("SELECT * FROM orders WHERE status=#{status} AND order_time < #{time}")
     List<Orders> getOrderByStatusAndTime(Integer status, LocalDateTime time);
 
-    /** 统计符合时间区间的订单 */
+    /** 统计符合时间区间的有效订单 */
     // 用between要注意 between (end 23:59:59)
-    List<Orders> getOrdersByDurationTime(LocalDateTime begin,LocalDateTime end);
+    List<Orders> getCompleteOrdersByTime(LocalDateTime begin, LocalDateTime end);
+
+    /** 统计符合区间的订单 */
+    List<Orders> getOrdersByTime(LocalDateTime begin, LocalDateTime end);
+
+    /** 统计开始时间前订单数量,status为空时统计全部 */
+    Integer getNumBeforeTime(LocalDateTime begin,Integer status);
 }

@@ -113,7 +113,7 @@
         SELECT COUNT(id) FROM orders
         WHERE status = #{status}
     </select>
-    <select id="getOrdersByDurationTime" resultType="com.sky.entity.Orders">
+    <select id="getCompleteOrdersByTime" resultType="com.sky.entity.Orders">
         SELECT * FROM orders
         <where>
             <if test="begin != null"> AND order_time &gt;= #{begin}</if>
@@ -121,5 +121,23 @@
             AND status = 5
         </where>
     </select>
-<!--    @Select("SELECT * FROM orders WHERE order_time >= #{begin} AND order_time < #{end} AND status = 5")-->
+    <select id="getOrdersByTime" resultType="com.sky.entity.Orders">
+        SELECT id,status,order_time FROM orders
+        <where>
+            <if test="begin != null"> AND order_time &gt;= #{begin}</if>
+            <if test="end != null"> AND order_time &lt; #{end}</if>
+        </where>
+    </select>
+    <select id="getNumBeforeTime" resultType="java.lang.Integer">
+        SELECT COUNT(id) FROM orders
+        <where>
+            <if test="begin != null">
+                AND order_time &lt; #{begin}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+    <!--    @Select("SELECT * FROM orders WHERE order_time >= #{begin} AND order_time < #{end} AND status = 5")-->
 </mapper>

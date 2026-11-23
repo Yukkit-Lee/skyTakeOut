@@ -8,4 +8,12 @@
         INSERT INTO user (openid, create_time,name,phone,sex,id_number,avatar)
         VALUES (#{openid}, #{createTime},#{name},#{phone},#{sex},#{idNumber},#{avatar})
     </insert>
+    <select id="getUserByDuration" resultType="com.sky.entity.User">
+        SELECT id,create_time FROM
+        user
+        <where>
+            <if test="begin != null"> AND create_time &gt;= #{begin}</if>
+            <if test="end != null"> AND create_time &lt;= #{end}</if>
+        </where>
+    </select>
 </mapper>
