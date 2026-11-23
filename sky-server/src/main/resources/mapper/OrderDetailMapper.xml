@@ -5,8 +5,8 @@
 
     <insert id="insertDetails">
         INSERT INTO order_detail
-        (name, image, order_id, dish_id, setmeal_id, dish_flavor, amount) VALUES
-        (#{name},#{image},#{orderId},#{dishId},#{setmealId},#{dishFlavor},#{amount})
+            (name, image, order_id, dish_id, setmeal_id, dish_flavor, amount)
+        VALUES (#{name}, #{image}, #{orderId}, #{dishId}, #{setmealId}, #{dishFlavor}, #{amount})
     </insert>
 
     <!--什么情况加close open? 目前是insert一整条记录-->
@@ -19,8 +19,24 @@
         </foreach>
     </insert>
     <select id="getDetailsByOrderId" resultType="com.sky.entity.OrderDetail">
-        SELECT * FROM order_detail
-        WHERE order_id =#{orderId}
+        SELECT *
+        FROM order_detail
+        WHERE order_id = #{orderId}
+    </select>
+    <select id="getTopTenDetails" resultType="com.sky.vo.OrderDetailTopVO">
+        SELECT name,SUM(number) AS total_number
+        FROM order_detail
+        <where>
+            <if test="ordersIdList != null">
+                order_id in
+                <foreach collection="ordersIdList" separator="," item="orderId" close=")" open="(">
+                    #{orderId}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY name
+        ORDER BY total_number DESC
+        LIMIT 10
     </select>
 
 </mapper>

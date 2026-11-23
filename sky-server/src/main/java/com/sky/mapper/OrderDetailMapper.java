@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.sky.entity.OrderDetail;
+import com.sky.vo.OrderDetailTopVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.aspectj.weaver.ast.Or;
 
@@ -22,4 +23,7 @@ public interface OrderDetailMapper {
 
     /** 根据orderId查询菜品明细 */
     List<OrderDetail> getDetailsByOrderId(Long orderId);
+
+    /** 根据orderIdList查询菜品明细 */
+    List<OrderDetailTopVO> getTopTenDetails(List<Long> ordersIdList);
 }

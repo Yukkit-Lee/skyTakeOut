@@ -3,6 +3,7 @@ package com.sky.mapper;
 import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
+import com.sky.vo.OrderDetailTopVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -60,4 +61,7 @@ public interface OrderMapper {
 
     /** 统计开始时间前订单数量,status为空时统计全部 */
     Integer getNumBeforeTime(LocalDateTime begin,Integer status);
+
+    /** 多表查询Top10菜品数据 符合时间区间且 status=5 */
+    List<OrderDetailTopVO> getTopTen(LocalDateTime begin, LocalDateTime end);
 }

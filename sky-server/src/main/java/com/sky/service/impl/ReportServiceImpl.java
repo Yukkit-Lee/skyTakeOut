@@ -2,13 +2,12 @@ package com.sky.service.impl;
 
 import com.sky.entity.Orders;
 import com.sky.entity.User;
+import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.vo.*;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: 44219
@@ -33,6 +33,9 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
+
     @Override
     public TurnoverReportVO getTurnOver(LocalDate begin, LocalDate end) {
 
@@ -46,7 +49,7 @@ public class ReportServiceImpl implements ReportService {
 
 
         // begin自加一天直到等于end
-        List<LocalDate> dateList = buildDateList(begin,end);
+        List<LocalDate> dateList = buildDateList(begin, end);
 
         // 业务逻辑: 前端传 beginTime endTime -> 查order表统计amount orderTime
         List<Orders> orders = orderMapper.getCompleteOrdersByTime(beginToMapper, endToMapper);
@@ -101,7 +104,7 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime beginAtStartDay = begin.atStartOfDay();
 
         // 2.构造dateList 11.02 11.03 11.04 11.05 ... 11.23
-        List<LocalDate> dateList = buildDateList(begin,end);
+        List<LocalDate> dateList = buildDateList(begin, end);
 
         // <11.02 0>,<11.03 0>.....,<11.23 0>
         Map<LocalDate, Integer> newUserMap = new LinkedHashMap<>();
@@ -156,44 +159,44 @@ public class ReportServiceImpl implements ReportService {
         // 业务逻辑: 每日订单数 每日有效订单数 -> 查id,status  (区间内)
         // 订单总数 有效订单数 ->  查count id (区间内)
 
-        if(begin==null||end==null)
+        if (begin == null || end == null)
             return null;
 
         LocalDateTime beginToMapper = LocalDateTime.of(begin, LocalTime.MIN);
         LocalDateTime endToMapper = LocalDateTime.of(end, LocalTime.MAX);
-        LocalDateTime beginAtStartDay=begin.atStartOfDay();
+        LocalDateTime beginAtStartDay = begin.atStartOfDay();
 
         List<LocalDate> dateList = buildDateList(begin, end);
 
 
         // 构造（每日订单数 每日有效订单数） MAP
-        Map<LocalDate,Integer> totalOrderMap=new LinkedHashMap<>();
-        Map<LocalDate,Integer> completeOrderMap=new LinkedHashMap<>();
+        Map<LocalDate, Integer> totalOrderMap = new LinkedHashMap<>();
+        Map<LocalDate, Integer> completeOrderMap = new LinkedHashMap<>();
         for (LocalDate date : dateList) {
-            totalOrderMap.put(date,0);
-            completeOrderMap.put(date,0);
+            totalOrderMap.put(date, 0);
+            completeOrderMap.put(date, 0);
         }
 
         // 遍历mapper层 ->
-        Integer validCountNum=0;
+        Integer validCountNum = 0;
         List<Orders> allOrders = orderMapper.getOrdersByTime(beginToMapper, endToMapper);
         for (Orders order : allOrders) {
             LocalDate curDate = order.getOrderTime().toLocalDate();
-            if(totalOrderMap.containsKey(curDate))
+            if (totalOrderMap.containsKey(curDate))
                 totalOrderMap.put(curDate, totalOrderMap.get(curDate) + 1);
-            if(order.getStatus().equals(Orders.COMPLETED)&&completeOrderMap.containsKey(curDate)) {
+            if (order.getStatus().equals(Orders.COMPLETED) && completeOrderMap.containsKey(curDate)) {
                 completeOrderMap.put(curDate, completeOrderMap.get(curDate) + 1);
-                    validCountNum++;
+                validCountNum++;
             }
         }
 
-        Integer totalOrderCount=allOrders.size();
-        Double orderCompletionRate= (double)validCountNum/totalOrderCount;
+        Integer totalOrderCount = allOrders.size();
+        Double orderCompletionRate = (double) validCountNum / totalOrderCount;
 
 
-        String dateListStr=StringUtils.join(dateList,",");
-        String orderCountList=StringUtils.join(totalOrderMap.values(),",");
-        String validList=StringUtils.join(completeOrderMap.values(),",");
+        String dateListStr = StringUtils.join(dateList, ",");
+        String orderCountList = StringUtils.join(totalOrderMap.values(), ",");
+        String validList = StringUtils.join(completeOrderMap.values(), ",");
 
 
         return OrderReportVO.builder()
@@ -211,24 +214,52 @@ public class ReportServiceImpl implements ReportService {
     public SalesTop10ReportVO getTopTen(LocalDate begin, LocalDate end) {
 
         /* 业务逻辑总览:
-        * 根据(begin,end)区间在order表中查到 id
-        * 根据order_id 到 order_detail表中
-        * */
+         * 根据(begin,end)区间在order表中查到 id
+         * 根据order_id 到 order_detail表中 查询
+         * GROUP BY name
+         * select name,sum(number)
+         *
+         * nameList 逗号分隔，numberList逗号分隔
+         * */
 
+        if (begin == null || end == null)
+            return null;
 
-        return null;
+        // 构造LocalDateTime对象
+        LocalDateTime beginToMapper = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endToMapper = LocalDateTime.of(end, LocalTime.MAX);
+
+        // 内连接多表查询
+        List<OrderDetailTopVO> topTenList = orderMapper.getTopTen(beginToMapper, endToMapper);
+
+        // Stream中map为映射（转换）函数:流中所有元素都要 按照规则变形 这里是 getName
+        List<String> nameList = topTenList.stream().map(OrderDetailTopVO::getName)
+                .collect(Collectors.toList());
+        List<Integer> numberList = topTenList.stream().map(OrderDetailTopVO::getTotalNumber)
+                .collect(Collectors.toList());
+
+        String nameListStr=StringUtils.join(nameList,",");
+        String numberListStr=StringUtils.join(numberList,",");
+
+        return SalesTop10ReportVO.builder()
+                .nameList(nameListStr)
+                .numberList(numberListStr)
+                .build();
+
     }
 
-    /** 辅助函数：用于构造dateList */
-    private List<LocalDate> buildDateList(LocalDate beginTime,LocalDate endTime){
-        List<LocalDate> dateList=new ArrayList<>();
+    /**
+     * 辅助函数：用于构造dateList
+     */
+    private List<LocalDate> buildDateList(LocalDate beginTime, LocalDate endTime) {
+        List<LocalDate> dateList = new ArrayList<>();
 
-        if(beginTime.isAfter(endTime))
+        if (beginTime.isAfter(endTime))
             return dateList;
 
         dateList.add(beginTime);
-        while(!beginTime.equals(endTime)){
-            beginTime=beginTime.plusDays(1);
+        while (!beginTime.equals(endTime)) {
+            beginTime = beginTime.plusDays(1);
             dateList.add(beginTime);
         }
         return dateList;
