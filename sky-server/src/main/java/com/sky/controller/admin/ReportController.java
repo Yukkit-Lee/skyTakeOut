@@ -66,7 +66,7 @@ public class ReportController {
     @GetMapping("/export")
     @ApiOperation("导出运营报表")
     public void exportData(HttpServletResponse response) {
-
+        reportService.exportData(response);
         return ;
     }
 

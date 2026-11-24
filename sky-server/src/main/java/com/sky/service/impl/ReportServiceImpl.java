@@ -9,12 +9,16 @@ import com.sky.service.ReportService;
 import com.sky.service.WorkspaceService;
 import com.sky.vo.*;
 import io.swagger.models.auth.In;
-import jdk.vm.ci.meta.Local;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -244,8 +248,8 @@ public class ReportServiceImpl implements ReportService {
         List<Integer> numberList = topTenList.stream().map(OrderDetailTopVO::getTotalNumber)
                 .collect(Collectors.toList());
 
-        String nameListStr=StringUtils.join(nameList,",");
-        String numberListStr=StringUtils.join(numberList,",");
+        String nameListStr = StringUtils.join(nameList, ",");
+        String numberListStr = StringUtils.join(numberList, ",");
 
         return SalesTop10ReportVO.builder()
                 .nameList(nameListStr)
@@ -260,16 +264,72 @@ public class ReportServiceImpl implements ReportService {
         // 业务逻辑: 数据库查询数据 -> 填充Excel表 —> 输出流下载
 
         LocalDate beginDay = LocalDate.now().minusDays(30);
-        LocalDate endDay=LocalDate.now();
+        LocalDate endDay = LocalDate.now().minusDays(1);
 
         LocalDateTime beginToMapper = LocalDateTime.of(beginDay, LocalTime.MIN);
         LocalDateTime endDayToMapper = LocalDateTime.of(endDay, LocalTime.MAX);
 
         // 概览数据参考 businessData接口,调用 WorkspaceService
-        workspaceService.getBusinessData(beginToMapper,endDayToMapper);
+        BusinessDataVO overViewData = workspaceService.getBusinessData(beginToMapper, endDayToMapper);
 
 
-        return ;
+        //从项目的`classpath`中查找资源文件，并以输入流形式读取
+        InputStream resourceAsStream = this.getClass(). //获取当前对象的Class对象
+                getClassLoader().   //获取类加载器
+                getResourceAsStream("template/excelTemplate.xlsx");
+
+
+
+        try {
+            XSSFWorkbook excel = new XSSFWorkbook(resourceAsStream); //  java内存中对象
+
+            XSSFSheet curSheet = excel.getSheet("Sheet1");
+            XSSFRow rowVariable = curSheet.getRow(1);   //获取"运营数据报表" 下方行
+            rowVariable.getCell(1).setCellValue("数据时间:"+beginDay+"-"+endDay);
+
+            // 概览数据第一行数据填充
+            rowVariable=curSheet.getRow(3);
+            rowVariable.getCell(2).setCellValue(overViewData.getTurnover());
+            rowVariable.getCell(4).setCellValue(overViewData.getOrderCompletionRate());
+            rowVariable.getCell(6).setCellValue(overViewData.getNewUsers());
+
+            // 概览数据第二行数据填充
+            rowVariable= curSheet.getRow(4);
+            rowVariable.getCell(2).setCellValue(overViewData.getValidOrderCount());
+            rowVariable.getCell(4).setCellValue(overViewData.getUnitPrice());
+
+            // 单次循环Row++ 循环内cellNum++
+            int dataRowIndex=7;
+
+            List<LocalDate> dateList = buildDateList(beginDay, endDay);
+            for (LocalDate curDate : dateList) {
+                rowVariable=curSheet.getRow(dataRowIndex++);
+                LocalDateTime dateStartTime=LocalDateTime.of(curDate,LocalTime.MIN);
+                LocalDateTime dateEndTime=LocalDateTime.of(curDate,LocalTime.MAX);
+
+                BusinessDataVO detailData = workspaceService.getBusinessData(dateStartTime, dateEndTime);
+
+                rowVariable.getCell(1).setCellValue(curDate.toString());
+                rowVariable.getCell(2).setCellValue(detailData.getTurnover());
+                rowVariable.getCell(3).setCellValue(detailData.getValidOrderCount());
+                rowVariable.getCell(4).setCellValue(detailData.getOrderCompletionRate());
+                rowVariable.getCell(5).setCellValue(detailData.getUnitPrice());
+                rowVariable.getCell(6).setCellValue(detailData.getNewUsers());
+            }
+
+            // 通过输出流将Excel文件下载到客户端浏览器
+            ServletOutputStream outputStream = response.getOutputStream();
+            excel.write(outputStream);
+
+
+            // 关闭IO流
+            outputStream.close();
+            excel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return;
     }
 
     /**
