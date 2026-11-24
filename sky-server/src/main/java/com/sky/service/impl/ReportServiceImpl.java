@@ -6,12 +6,15 @@ import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
+import com.sky.service.WorkspaceService;
 import com.sky.vo.*;
 import io.swagger.models.auth.In;
+import jdk.vm.ci.meta.Local;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +38,9 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private WorkspaceService workspaceService;
 
     @Override
     public TurnoverReportVO getTurnOver(LocalDate begin, LocalDate end) {
@@ -223,7 +229,7 @@ public class ReportServiceImpl implements ReportService {
          * */
 
         if (begin == null || end == null)
-            return null;
+            return new SalesTop10ReportVO();
 
         // 构造LocalDateTime对象
         LocalDateTime beginToMapper = LocalDateTime.of(begin, LocalTime.MIN);
@@ -246,6 +252,24 @@ public class ReportServiceImpl implements ReportService {
                 .numberList(numberListStr)
                 .build();
 
+    }
+
+    @Override
+    public void exportData(HttpServletResponse response) {
+        // 近30日运营数据报表
+        // 业务逻辑: 数据库查询数据 -> 填充Excel表 —> 输出流下载
+
+        LocalDate beginDay = LocalDate.now().minusDays(30);
+        LocalDate endDay=LocalDate.now();
+
+        LocalDateTime beginToMapper = LocalDateTime.of(beginDay, LocalTime.MIN);
+        LocalDateTime endDayToMapper = LocalDateTime.of(endDay, LocalTime.MAX);
+
+        // 概览数据参考 businessData接口,调用 WorkspaceService
+        workspaceService.getBusinessData(beginToMapper,endDayToMapper);
+
+
+        return ;
     }
 
     /**

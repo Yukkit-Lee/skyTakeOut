@@ -159,6 +159,41 @@
         ORDER BY total_number DESC
         LIMIT 10
     </select>
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
 
-
+    <select id="sumByMap" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
 </mapper>
+
+<!--        SELECT od.name,sum(od.number) AS total_number-->
+<!--        FROM order_detail AS od-->
+<!--        JOIN orders AS o ON od.order_id=o.id-->
+<!--        WHERE o.order_time >= '' AND o.order_time < '' AND o.status = 5-->
+<!--        GROUP BY name-->
+<!--        ORDER BY total_number DESC-->
+<!--        LIMIT 10-->

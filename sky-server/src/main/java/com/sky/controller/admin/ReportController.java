@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 
 /**
@@ -59,6 +60,14 @@ public class ReportController {
                                                        @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
         SalesTop10ReportVO topTen = reportService.getTopTen(begin, end);
         return Result.success(topTen);
+    }
+
+
+    @GetMapping("/export")
+    @ApiOperation("导出运营报表")
+    public void exportData(HttpServletResponse response) {
+
+        return ;
     }
 
 }

@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: 44219
@@ -32,4 +33,11 @@ public interface UserMapper {
     /** 获取指定日期前用户数 */
     @Select("SELECT COUNT(*) FROM user WHERE create_time < #{curTime}")
     Integer getCountBeforeDuration(LocalDateTime curTime);
+
+    /**
+     * 根据动态条件统计用户数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
 }
